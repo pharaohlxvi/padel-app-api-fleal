@@ -12,7 +12,7 @@ class GameController {
     // get currently authenticated user
     const user = auth.current.user
     // get user data from createGame form
-    const gameData = request.only(['date', 'time', 'venue', 'duration', 'price', 'max_num'])
+    const gameData = request.only(['date', 'time', 'venue', 'duration', 'price', 'max_num', 'need_equip'])
     this.formatObj(gameData, user.level, user.id)
     try {
       // Save game to database
@@ -31,7 +31,7 @@ class GameController {
     }
   }
   formatObj(gameData, userLevel, userId) {
-    gameData.need_equip = 1,
+    // gameData.need_equip = 1,
     gameData.avg_level = userLevel,
     gameData.min_num = 4,
     gameData.max_num = parseInt(gameData.max_num),
@@ -112,7 +112,7 @@ class GameController {
         game.time = request.input('time')
         game.venue = request.input('venue')
         game.duration = request.input('duration')
-        // game.need_equip = request.input('need_equip')
+        game.need_equip = request.input('need_equip')
         game.price = request.input('price')
         // game.avg_level = request.input('avg_level')
         game.max_num = request.input('max_num')
@@ -188,9 +188,9 @@ class GameController {
   async acceptRequest ({ request, auth, response }) {
     // get currently authenticated user
     const user = await User.query()
-        .where('id', request.input('user_id'))
-        .with('applications')
-        .firstOrFail()
+      .where('id', request.input('user_id'))
+      .with('applications')
+      .firstOrFail()
     const game = await Game.query()
       .where('id', request.input('game_id'))
       .firstOrFail()
