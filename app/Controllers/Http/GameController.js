@@ -151,6 +151,29 @@ class GameController {
     })
   }
 
+  // *** WORKING *** LEAVE GAME *** WORKING ***
+  async leaveGame ({ request, auth, response }) {
+    // get currently authenticated user
+    const user = auth.current.user
+
+    const game = await Game.query()
+      .where('id', request.input('game_id'))
+      .firstOrFail()
+    let newAvg
+    game.curr_num === 1 ? newAvg = 0 : newAvg = (((game.avg_level * game.curr_num) - user.level) / (game.curr_num - 1))
+    game.merge({
+      avg_level: newAvg,
+      curr_num: game.curr_num - 1
+    })
+    await game.save()
+    // remove from user's games
+    await user.games().detach(request.input('game_id'))
+    return response.json({
+        status: 'success',
+        data: null
+    })
+  }
+
   // REQUEST TO JOIN A GAME
   async requestJoinGame ({ request, auth, response }) {
     // console.log('game_id = ' + JSON.stringify(request.input('game_id'), null, 2))
@@ -186,6 +209,33 @@ class GameController {
   }
 
   async acceptRequest ({ request, auth, response }) {
+    console.log('acceptRequest')
+    // get currently authenticated user
+    const user = await User.query()
+      .where('id', request.input('user_id'))
+      .with('applications')
+      .firstOrFail()
+    console.log('1) user = ' + JSON.stringify(user, null, 2))
+    const game = await Game.query()
+      .where('id', request.input('game_id'))
+      .firstOrFail()
+    console.log('2) game = ' + JSON.stringify(game, null, 2))
+    game.merge({
+      avg_level: (((game.avg_level * game.curr_num) + user.level) / (game.curr_num + 1))
+    })
+    await game.save()
+    await user.games().attach(request.input('game_id'))
+    await user.applications().detach(request.input('game_id'))
+    console.log('3) user = ' + JSON.stringify(user, null, 2))
+    console.log('4) game = ' + JSON.stringify(game, null, 2))
+    return response.json({
+      status: 'success',
+      data: game
+    })
+  }
+
+  async rejectRequest ({ request, auth, response }) {
+    console.log('1) rejectRequest')
     // get currently authenticated user
     const user = await User.query()
       .where('id', request.input('user_id'))
@@ -195,41 +245,16 @@ class GameController {
       .where('id', request.input('game_id'))
       .firstOrFail()
     game.merge({
-      avg_level: (((game.avg_level * game.curr_num) + user.level) / (game.curr_num + 1)),
-      curr_num: game.curr_num + 1
+      curr_num: game.curr_num - 1
     })
     await game.save()
-    await user.games().attach(request.input('game_id'))
+    await user.games().detach(request.input('game_id'))
     await user.applications().detach(request.input('game_id'))
     return response.json({
       status: 'success',
       data: game
     })
   }
-
-  // *** WORKING *** LEAVE GAME *** WORKING ***
-  async leaveGame ({ request, auth, response }) {
-    // get currently authenticated user
-    const user = auth.current.user
-
-    const game = await Game.query()
-      .where('id', request.input('game_id'))
-      .firstOrFail()
-
-    game.merge({
-      avg_level: (((game.avg_level * game.curr_num) - user.level) / (game.curr_num - 1)),
-      curr_num: game.curr_num - 1
-    })
-    await game.save()
-    // console.log('2) params = ' + JSON.stringify(request.input('game_id'), null, 2))
-    // remove from user's games
-    await user.games().detach(request.input('game_id'))
-
-    return response.json({
-        status: 'success',
-        data: null
-    })
-}
 
   // DELETE GAME
   async deleteGame ({ request, auth, params, response }) {

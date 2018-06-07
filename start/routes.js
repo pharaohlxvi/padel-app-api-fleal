@@ -47,6 +47,7 @@ Route.group(() => {
   Route.post('/request_join/', 'GameController.requestJoinGame')
   Route.post('/join/', 'GameController.joinGame')
   Route.post('/accept/', 'GameController.acceptRequest')
+  Route.post('/reject/', 'GameController.rejectRequest')
   Route.put('/update/:id', 'GameController.updateGame')
   Route.post('/leave/', 'GameController.leaveGame')
   Route.delete('/delete/:id', 'GameController.deleteGame')
