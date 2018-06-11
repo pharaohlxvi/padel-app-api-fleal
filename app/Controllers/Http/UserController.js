@@ -56,16 +56,32 @@ class UserController {
     }
   }
 
-  // *** WORKING *** GET CURRENT AUTHENTICATED USER AND ITS GAMES *** WORKING ***
-  async getUserGames ({ auth, response }) {
-    // console.log('user getUserGames = ')
+  async me ({ auth, response }) {
     try {
       const user = await User.query()
         .where('id', auth.current.user.id)
         .with('games')
         .with('applications')
         .firstOrFail()
-        // console.log('1) user user = ' + JSON.stringify(user, null, 2))
+      return response.json({
+          status: 'success',
+          data: user
+      })
+    } catch (error) {
+      response.status(400).json({
+          status: 'error',
+          message: 'Tivemos um problema. Por favor tente novamente.'
+      })
+    }
+  }
+
+  // *** WORKING *** GET CURRENT AUTHENTICATED USER AND ITS GAMES *** WORKING ***
+  async getUserGames ({ auth, response }) {
+    try {
+      const user = await User.query()
+        .where('id', auth.current.user.id)
+        .with('games')
+        .firstOrFail()
       return response.json({
         status: 'success',
         data: user
@@ -77,19 +93,6 @@ class UserController {
       })
     }
   }
-
-  // async getUserGames ({ auth, response }) {
-  //   const user = await User.query()
-  //     .where('id', auth.current.user.id)
-  //     .with('games')
-  //     // .with('applications')
-  //     .firstOrFail()
-  //   console.log('user.games = ' + JSON.stringify(this.user.games, null, 2))
-  //   return response.json({
-  //     status: 'success',
-  //     data: user
-  //   })
-  // }
 
   // GETS USER INFO FROM ID
   async getUserInfo ({ params, response }) {
@@ -136,25 +139,24 @@ class UserController {
     }
   }
 
-  // SHOW PROFILE
-  // async showProfile ({ request, params, response }) {
-  //   try {
-  //       const user = await User.query()
-  //           .where('email', params.email)
-  //           .with('games')
-  //           .firstOrFail()
-
-  //       return response.json({
-  //           status: 'success',
-  //           data: user
-  //       })
-  //   } catch (error) {
-  //       return response.status(404).json({
-  //           status: 'error',
-  //           message: 'Usu&aacute;rio n&atilde;o encontrado!'
-  //       })
-  //   }
-  // }
+  async showProfile ({ request, params, response }) {
+    try {
+        const user = await User.query()
+            .where('email', params.email)
+            .with('games')
+            .with('applications')
+            .firstOrFail()
+        return response.json({
+            status: 'success',
+            data: user
+        })
+    } catch (error) {
+        return response.status(404).json({
+            status: 'error',
+            message: 'Usu&aacute;rio n&atilde;o encontrado!'
+        })
+    }
+}
 
   // *** WORKING *** CHANGE PASSWORD *** WORKING ***
   async changePassword ({ request, auth, response }) {

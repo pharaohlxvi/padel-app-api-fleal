@@ -27,9 +27,10 @@ Route.get('/fetch_user_games', 'GameController.getAllUserGames').middleware(['au
 Route.get('/fetch_game/:id', 'GameController.fetchGame').middleware(['auth:jwt'])
 Route.get('/games/applications', 'GameController.getGamesWithApplication').middleware(['auth:jwt'])
 Route.get('/info/user/:id', 'UserController.getUserInfo')
-// Route.get('/game/get_requested/', 'GameController.getRequestedGames')
+Route.post('/games/searched', 'GameController.getSearchedGames')
 
 Route.group(() => {
+  Route.get('/me', 'UserController.me')
   Route.put('/update_profile', 'UserController.updateProfile')
   Route.put('/change_password', 'UserController.changePassword');
 })
@@ -37,7 +38,6 @@ Route.group(() => {
   .middleware(['auth:jwt'])
 
 Route.group(() => {
-  // Route.get('/games_to_join', 'UserController.gamesToJoin')
   Route.get('/games', 'UserController.getUserGames')
 })
   .prefix('users')
@@ -57,4 +57,4 @@ Route.group(() => {
 
 Route.get('/game/:id', 'GameController.show')
 Route.delete('/game/destroy/:id', 'GameController.destroy').middleware(['auth:jwt'])
-// Route.get(':user', 'UserController.showProfile')
+Route.get('/:email', 'UserController.showProfile')

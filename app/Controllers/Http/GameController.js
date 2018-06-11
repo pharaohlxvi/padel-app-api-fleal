@@ -39,15 +39,6 @@ class GameController {
     gameData.user_id = userId
   }
 
-    // *** WORKING *** GET ALL GAMES *** WORKING ***
-    async getAllGames ({ request, response }) {
-      const allGames = await Game.all()
-      return response.json({
-        status: 'success',
-        data: allGames
-      })
-    }
-
   // *** WORKING *** GET ALL USER GAMES *** WORKING ***
   async getAllUserGames ({ auth, response }) {
     const allUserGames = await Game.query()
@@ -65,6 +56,7 @@ class GameController {
 
       const game = await Game.query()
         .where('id', params.id)
+        .with('users')
         .firstOrFail()
       return response.json({
         status: 'success',
@@ -75,6 +67,32 @@ class GameController {
       return response.status(400).json({
           status: 'error',
           message: 'Tivemos um problema atualizando seu jogo. Por favor tente novamente.'
+      })
+    }
+  }
+
+  async getSearchedGames ({ request, response }) {
+    const searchTerm = request.only(['venue', 'date', 'price'])
+    searchTerm.venue = '%'+searchTerm.venue+'%'
+    searchTerm.price = '%'+searchTerm.price+'%'
+    if (!searchTerm.date) {
+      searchTerm.date = '%'
+    }
+    try {
+      var games = await Game.query()
+        .whereRaw('venue LIKE ?', searchTerm.venue)
+        .whereRaw('date LIKE ?', searchTerm.date)
+        .whereRaw('price LIKE ?', searchTerm.price)
+        .with('applicants')
+        .fetch()
+      return response.json({
+        status: 'success',
+        data: games
+      })
+    } catch (error) {
+      response.status(400).json({
+          status: 'error',
+          message: 'Tivemos um problema com sua busca. Por favor tente novamente.'
       })
     }
   }
@@ -114,7 +132,6 @@ class GameController {
         game.duration = request.input('duration')
         game.need_equip = request.input('need_equip')
         game.price = request.input('price')
-        // game.avg_level = request.input('avg_level')
         game.max_num = request.input('max_num')
 
         await game.save()
@@ -176,27 +193,20 @@ class GameController {
 
   // REQUEST TO JOIN A GAME
   async requestJoinGame ({ request, auth, response }) {
-    // console.log('game_id = ' + JSON.stringify(request.input('game_id'), null, 2))
     try {
-      // const user = auth.current.user
       const user = await User.query()
         .where('id', auth.current.user.id)
         .with('applications')
         .firstOrFail()
-      // console.log('1) user = ' + JSON.stringify(user, null, 2))
       const game = await Game.query()
         .where('id', request.input('game_id'))
         .with('applicants')
         .firstOrFail()
-      // console.log('2) game = ' + JSON.stringify(game, null, 2))
       game.merge({
         curr_num: game.curr_num + 1
       })
-      // console.log('3) game = ' + JSON.stringify(game, null, 2))
       await game.save()
-      // console.log('4) game = ' + JSON.stringify(game, null, 2))
       await user.applications().attach(game.id)
-      // console.log('5) user = ' + JSON.stringify(user, null, 2))
       return response.json({
         status: 'success',
       })
@@ -209,25 +219,19 @@ class GameController {
   }
 
   async acceptRequest ({ request, auth, response }) {
-    console.log('acceptRequest')
-    // get currently authenticated user
     const user = await User.query()
       .where('id', request.input('user_id'))
       .with('applications')
       .firstOrFail()
-    console.log('1) user = ' + JSON.stringify(user, null, 2))
     const game = await Game.query()
       .where('id', request.input('game_id'))
       .firstOrFail()
-    console.log('2) game = ' + JSON.stringify(game, null, 2))
     game.merge({
       avg_level: (((game.avg_level * game.curr_num) + user.level) / (game.curr_num + 1))
     })
     await game.save()
     await user.games().attach(request.input('game_id'))
     await user.applications().detach(request.input('game_id'))
-    console.log('3) user = ' + JSON.stringify(user, null, 2))
-    console.log('4) game = ' + JSON.stringify(game, null, 2))
     return response.json({
       status: 'success',
       data: game
@@ -235,8 +239,6 @@ class GameController {
   }
 
   async rejectRequest ({ request, auth, response }) {
-    console.log('1) rejectRequest')
-    // get currently authenticated user
     const user = await User.query()
       .where('id', request.input('user_id'))
       .with('applications')
