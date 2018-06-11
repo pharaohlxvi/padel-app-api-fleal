@@ -31,7 +31,6 @@ class GameController {
     }
   }
   formatObj(gameData, userLevel, userId) {
-    // gameData.need_equip = 1,
     gameData.avg_level = userLevel,
     gameData.min_num = 4,
     gameData.max_num = parseInt(gameData.max_num),
@@ -53,7 +52,6 @@ class GameController {
   async fetchGame ({ request, auth, params, response }) {
     try {
       const user = auth.current.user
-
       const game = await Game.query()
         .where('id', params.id)
         .with('users')
@@ -219,6 +217,7 @@ class GameController {
   }
 
   async acceptRequest ({ request, auth, response }) {
+    // get currently authenticated user
     const user = await User.query()
       .where('id', request.input('user_id'))
       .with('applications')
@@ -239,6 +238,7 @@ class GameController {
   }
 
   async rejectRequest ({ request, auth, response }) {
+    // get currently authenticated user
     const user = await User.query()
       .where('id', request.input('user_id'))
       .with('applications')

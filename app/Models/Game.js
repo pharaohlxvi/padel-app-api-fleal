@@ -4,9 +4,6 @@ const Model = use('Model')
 
 class Game extends Model {
 
-  // DATE FORMAT from the form (Lucid) = 2018-06-01T03:00:00.000Z
-  // DATE FORMAT displayed from search (SQL) = 2026-05-18 20:00:00
-
   // Defining date fields
   static get dates () {
     return super.dates.concat(['date'])

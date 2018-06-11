@@ -46,14 +46,6 @@ class User extends Model {
         'game_id'
     ).pivotModel('App/Models/Application')
   }
-
-  // games () {
-  //   return this.belongsToMany(
-  //     'App/Models/Game',
-  //     'user_id',
-  //     'game_id'
-  //   ).pivotTable('joined')
-  // }
 }
 
 module.exports = User
